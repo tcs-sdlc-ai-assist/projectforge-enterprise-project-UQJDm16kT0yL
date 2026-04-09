@@ -4,12 +4,20 @@
     {
       "src": "main.py",
       "use": "@vercel/python"
+    },
+    {
+      "src": "static/**",
+      "use": "@vercel/static"
     }
   ],
-  "rewrites": [
+  "routes": [
     {
-      "source": "/(.*)",
-      "destination": "/main.py"
+      "src": "/static/(.*)",
+      "dest": "static/$1"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "main.py"
     }
   ]
 }
