@@ -1,0 +1,251 @@
+{% extends "base.html" %}
+
+{% block title %}Labels — {{ project.name }} — ProjectForge{% endblock %}
+
+{% block content %}
+<div class="page-transition">
+    <!-- Breadcrumbs -->
+    <nav class="flex mb-6" aria-label="Breadcrumb">
+        <ol class="inline-flex items-center space-x-1 md:space-x-3 text-sm">
+            <li class="inline-flex items-center">
+                <a href="/dashboard" class="text-gray-500 hover:text-primary-600 inline-flex items-center">
+                    <svg class="w-4 h-4 mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m2.25 12 8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" /></svg>
+                    Dashboard
+                </a>
+            </li>
+            <li>
+                <div class="flex items-center">
+                    <svg class="w-5 h-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" /></svg>
+                    <a href="/projects" class="ml-1 text-gray-500 hover:text-primary-600">Projects</a>
+                </div>
+            </li>
+            <li>
+                <div class="flex items-center">
+                    <svg class="w-5 h-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" /></svg>
+                    <a href="/projects/{{ project.id }}" class="ml-1 text-gray-500 hover:text-primary-600">{{ project.name }}</a>
+                </div>
+            </li>
+            <li aria-current="page">
+                <div class="flex items-center">
+                    <svg class="w-5 h-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" /></svg>
+                    <span class="ml-1 text-gray-700 font-medium">Labels</span>
+                </div>
+            </li>
+        </ol>
+    </nav>
+
+    <!-- Page Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-900">Labels</h1>
+            <p class="mt-1 text-sm text-gray-500">Manage labels for <span class="font-medium text-gray-700">{{ project.name }}</span></p>
+        </div>
+        <div class="mt-3 sm:mt-0">
+            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-700">
+                {{ labels|length }} label{{ 's' if labels|length != 1 else '' }}
+            </span>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Labels Table -->
+        <div class="lg:col-span-2">
+            <div class="bg-white shadow-sm rounded-lg border border-gray-200 overflow-hidden">
+                <div class="px-4 py-3 border-b border-gray-200 bg-gray-50">
+                    <h2 class="text-sm font-semibold text-gray-700">All Labels</h2>
+                </div>
+                {% if labels|length > 0 %}
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Color</th>
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Preview</th>
+                                <th scope="col" class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Tickets</th>
+                                <th scope="col" class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            {% for label in labels %}
+                            <tr class="table-row-hover">
+                                <td class="px-4 py-3 whitespace-nowrap">
+                                    <div class="w-6 h-6 rounded-full border border-gray-300 shadow-sm" style="background-color: {{ label.color }};"></div>
+                                </td>
+                                <td class="px-4 py-3 whitespace-nowrap">
+                                    <span class="text-sm font-medium text-gray-900">{{ label.name }}</span>
+                                </td>
+                                <td class="px-4 py-3 whitespace-nowrap">
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium" style="background-color: {{ label.color }}20; color: {{ label.color }}; border: 1px solid {{ label.color }}40;">
+                                        {{ label.name }}
+                                    </span>
+                                </td>
+                                <td class="px-4 py-3 whitespace-nowrap text-center">
+                                    <span class="inline-flex items-center justify-center min-w-[1.5rem] h-6 px-2 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
+                                        {{ label.ticket_count if label.ticket_count is defined else 0 }}
+                                    </span>
+                                </td>
+                                <td class="px-4 py-3 whitespace-nowrap text-right">
+                                    <div class="flex items-center justify-end space-x-2">
+                                        <a href="/projects/{{ project.id }}/labels/{{ label.id }}/edit" class="inline-flex items-center px-2.5 py-1.5 text-xs font-medium rounded text-primary-700 bg-primary-50 hover:bg-primary-100 transition-colors duration-200" title="Edit label">
+                                            <svg class="w-3.5 h-3.5 mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" /></svg>
+                                            Edit
+                                        </a>
+                                        <form method="POST" action="/projects/{{ project.id }}/labels/{{ label.id }}/delete" onsubmit="return confirm('Are you sure you want to delete the label \'{{ label.name }}\'? This will remove it from all associated tickets.');">
+                                            <button type="submit" class="inline-flex items-center px-2.5 py-1.5 text-xs font-medium rounded text-red-700 bg-red-50 hover:bg-red-100 transition-colors duration-200" title="Delete label">
+                                                <svg class="w-3.5 h-3.5 mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" /></svg>
+                                                Delete
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="px-4 py-12 text-center">
+                    <svg class="mx-auto h-12 w-12 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9.568 3H5.25A2.25 2.25 0 0 0 3 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 0 0 5.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 0 0 9.568 3Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M6 6h.008v.008H6V6Z" /></svg>
+                    <h3 class="mt-2 text-sm font-medium text-gray-900">No labels yet</h3>
+                    <p class="mt-1 text-sm text-gray-500">Create your first label using the form or pick from suggested labels.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Sidebar: Create Form + Suggested Labels -->
+        <div class="lg:col-span-1 space-y-6">
+            <!-- Create Label Form -->
+            <div class="bg-white shadow-sm rounded-lg border border-gray-200 overflow-hidden">
+                <div class="px-4 py-3 border-b border-gray-200 bg-gray-50">
+                    <h2 class="text-sm font-semibold text-gray-700">Create New Label</h2>
+                </div>
+                <div class="p-4">
+                    <form method="POST" action="/projects/{{ project.id }}/labels" class="space-y-4">
+                        <div>
+                            <label for="name" class="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                            <input type="text" name="name" id="name" required maxlength="50" placeholder="e.g. bug, enhancement, docs" class="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm placeholder-gray-400 focus:border-primary-500 focus:ring-primary-500">
+                        </div>
+                        <div>
+                            <label for="color" class="block text-sm font-medium text-gray-700 mb-1">Color</label>
+                            <div class="flex items-center space-x-3">
+                                <input type="color" name="color" id="color" value="#3b82f6" class="h-10 w-14 rounded border border-gray-300 cursor-pointer p-0.5">
+                                <input type="text" id="color-hex" value="#3b82f6" maxlength="7" pattern="^#[0-9A-Fa-f]{6}$" class="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm font-mono placeholder-gray-400 focus:border-primary-500 focus:ring-primary-500" placeholder="#3b82f6">
+                            </div>
+                        </div>
+                        <div id="label-preview" class="flex items-center space-x-2">
+                            <span class="text-xs text-gray-500">Preview:</span>
+                            <span id="preview-badge" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium" style="background-color: #3b82f620; color: #3b82f6; border: 1px solid #3b82f640;">
+                                Label
+                            </span>
+                        </div>
+                        <button type="submit" class="w-full inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors duration-200">
+                            <svg class="w-4 h-4 mr-1.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+                            Create Label
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Suggested Labels -->
+            <div class="bg-white shadow-sm rounded-lg border border-gray-200 overflow-hidden">
+                <div class="px-4 py-3 border-b border-gray-200 bg-gray-50">
+                    <h2 class="text-sm font-semibold text-gray-700">Suggested Labels</h2>
+                    <p class="text-xs text-gray-500 mt-0.5">Click to quickly add common labels</p>
+                </div>
+                <div class="p-4">
+                    <div class="flex flex-wrap gap-2" id="suggested-labels">
+                        {% set suggested = [
+                            {"name": "bug", "color": "#dc2626"},
+                            {"name": "feature", "color": "#2563eb"},
+                            {"name": "enhancement", "color": "#7c3aed"},
+                            {"name": "documentation", "color": "#0891b2"},
+                            {"name": "design", "color": "#db2777"},
+                            {"name": "testing", "color": "#ea580c"},
+                            {"name": "refactor", "color": "#65a30d"},
+                            {"name": "performance", "color": "#ca8a04"},
+                            {"name": "security", "color": "#dc2626"},
+                            {"name": "infrastructure", "color": "#475569"},
+                            {"name": "accessibility", "color": "#0d9488"},
+                            {"name": "urgent", "color": "#b91c1c"},
+                            {"name": "good first issue", "color": "#16a34a"},
+                            {"name": "help wanted", "color": "#9333ea"},
+                            {"name": "wontfix", "color": "#6b7280"},
+                            {"name": "duplicate", "color": "#9ca3af"},
+                            {"name": "blocked", "color": "#ef4444"},
+                            {"name": "tech debt", "color": "#f59e0b"}
+                        ] %}
+                        {% for suggestion in suggested %}
+                        <button type="button" class="suggested-label-btn inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium cursor-pointer hover:opacity-80 transition-opacity duration-200 border" style="background-color: {{ suggestion.color }}15; color: {{ suggestion.color }}; border-color: {{ suggestion.color }}40;" data-name="{{ suggestion.name }}" data-color="{{ suggestion.color }}">
+                            <span class="w-2 h-2 rounded-full mr-1.5 flex-shrink-0" style="background-color: {{ suggestion.color }};"></span>
+                            {{ suggestion.name }}
+                        </button>
+                        {% endfor %}
+                    </div>
+                    <div class="mt-4 pt-3 border-t border-gray-100">
+                        <p class="text-xs text-gray-400">
+                            <svg class="inline w-3.5 h-3.5 mr-0.5 -mt-0.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" /></svg>
+                            Click a suggested label to populate the create form above.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var colorPicker = document.getElementById('color');
+        var colorHex = document.getElementById('color-hex');
+        var nameInput = document.getElementById('name');
+        var previewBadge = document.getElementById('preview-badge');
+
+        function updatePreview() {
+            var color = colorPicker.value;
+            var name = nameInput.value.trim() || 'Label';
+            previewBadge.textContent = name;
+            previewBadge.style.backgroundColor = color + '20';
+            previewBadge.style.color = color;
+            previewBadge.style.borderColor = color + '40';
+        }
+
+        if (colorPicker && colorHex) {
+            colorPicker.addEventListener('input', function() {
+                colorHex.value = colorPicker.value;
+                updatePreview();
+            });
+
+            colorHex.addEventListener('input', function() {
+                var val = colorHex.value;
+                if (/^#[0-9A-Fa-f]{6}$/.test(val)) {
+                    colorPicker.value = val;
+                    updatePreview();
+                }
+            });
+        }
+
+        if (nameInput) {
+            nameInput.addEventListener('input', function() {
+                updatePreview();
+            });
+        }
+
+        var suggestedButtons = document.querySelectorAll('.suggested-label-btn');
+        suggestedButtons.forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                var labelName = btn.getAttribute('data-name');
+                var labelColor = btn.getAttribute('data-color');
+                if (nameInput) nameInput.value = labelName;
+                if (colorPicker) colorPicker.value = labelColor;
+                if (colorHex) colorHex.value = labelColor;
+                updatePreview();
+                nameInput.focus();
+            });
+        });
+    });
+</script>
+{% endblock %}

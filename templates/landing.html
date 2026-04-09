@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+
+{% block title %}ProjectForge — Project Management Platform{% endblock %}
+
+{% block content %}
+<div class="page-transition">
+    <!-- Hero Section -->
+    <div class="text-center py-12 md:py-20">
+        <h1 class="text-4xl md:text-5xl lg:text-6xl font-extrabold text-gray-900 tracking-tight">
+            <span class="text-primary-600">Project</span>Forge
+        </h1>
+        <p class="mt-4 max-w-2xl mx-auto text-lg md:text-xl text-gray-600 leading-relaxed">
+            A comprehensive project management platform for teams of all sizes. Plan sprints, track tasks, collaborate in real time, and deliver projects on schedule.
+        </p>
+        <div class="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
+            {% if user %}
+            <a href="/dashboard" class="inline-flex items-center px-6 py-3 rounded-lg text-base font-semibold text-white bg-primary-600 hover:bg-primary-700 shadow-md hover:shadow-lg transition-all duration-200">
+                <svg class="w-5 h-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" /></svg>
+                Dashboard
+            </a>
+            <a href="/projects" class="inline-flex items-center px-6 py-3 rounded-lg text-base font-semibold text-primary-700 bg-primary-50 hover:bg-primary-100 border border-primary-200 shadow-sm hover:shadow-md transition-all duration-200">
+                <svg class="w-5 h-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12.75V12A2.25 2.25 0 014.5 9.75h15A2.25 2.25 0 0121.75 12v.75m-8.69-6.44l-2.12-2.12a1.5 1.5 0 00-1.061-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9a2.25 2.25 0 00-2.25-2.25h-5.379a1.5 1.5 0 01-1.06-.44z" /></svg>
+                My Projects
+            </a>
+            {% else %}
+            <a href="/auth/login" class="inline-flex items-center px-6 py-3 rounded-lg text-base font-semibold text-white bg-primary-600 hover:bg-primary-700 shadow-md hover:shadow-lg transition-all duration-200">
+                <svg class="w-5 h-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" /></svg>
+                Sign In
+            </a>
+            <a href="/auth/register" class="inline-flex items-center px-6 py-3 rounded-lg text-base font-semibold text-primary-700 bg-primary-50 hover:bg-primary-100 border border-primary-200 shadow-sm hover:shadow-md transition-all duration-200">
+                <svg class="w-5 h-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zM4 19.235v-.11a6.375 6.375 0 0112.75 0v.109A12.318 12.318 0 0110.374 21c-2.331 0-4.512-.645-6.374-1.766z" /></svg>
+                Create Account
+            </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Feature Highlights Grid -->
+    <div class="py-12 md:py-16">
+        <div class="text-center mb-12">
+            <h2 class="text-2xl md:text-3xl font-bold text-gray-900">Everything your team needs to deliver</h2>
+            <p class="mt-3 max-w-xl mx-auto text-base text-gray-500">Powerful tools designed to streamline your workflow from planning to deployment.</p>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+            <!-- Project Management -->
+            <div class="bg-white rounded-xl border border-gray-200 p-6 shadow-sm hover:shadow-md transition-shadow duration-200">
+                <div class="flex items-center justify-center w-12 h-12 rounded-lg bg-primary-100 text-primary-600 mb-4">
+                    <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12.75V12A2.25 2.25 0 014.5 9.75h15A2.25 2.25 0 0121.75 12v.75m-8.69-6.44l-2.12-2.12a1.5 1.5 0 00-1.061-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9a2.25 2.25 0 00-2.25-2.25h-5.379a1.5 1.5 0 01-1.06-.44z" /></svg>
+                </div>
+                <h3 class="text-lg font-semibold text-gray-900 mb-2">Project Management</h3>
+                <p class="text-sm text-gray-600 leading-relaxed">Create and manage multiple projects with customizable statuses, department assignments, and team member roles. Track progress from planning through completion.</p>
+            </div>
+
+            <!-- Sprint Tracking -->
+            <div class="bg-white rounded-xl border border-gray-200 p-6 shadow-sm hover:shadow-md transition-shadow duration-200">
+                <div class="flex items-center justify-center w-12 h-12 rounded-lg bg-green-100 text-green-600 mb-4">
+                    <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" /></svg>
+                </div>
+                <h3 class="text-lg font-semibold text-gray-900 mb-2">Sprint Tracking</h3>
+                <p class="text-sm text-gray-600 leading-relaxed">Plan and execute sprints with start and end date tracking, backlog management, velocity metrics, and burndown charts to keep your iterations on track.</p>
+            </div>
+
+            <!-- Kanban Boards -->
+            <div class="bg-white rounded-xl border border-gray-200 p-6 shadow-sm hover:shadow-md transition-shadow duration-200">
+                <div class="flex items-center justify-center w-12 h-12 rounded-lg bg-purple-100 text-purple-600 mb-4">
+                    <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 4.5v15m6-15v15m-10.875 0h15.75c.621 0 1.125-.504 1.125-1.125V5.625c0-.621-.504-1.125-1.125-1.125H4.125C3.504 4.5 3 5.004 3 5.625v12.75c0 .621.504 1.125 1.125 1.125z" /></svg>
+                </div>
+                <h3 class="text-lg font-semibold text-gray-900 mb-2">Kanban Boards</h3>
+                <p class="text-sm text-gray-600 leading-relaxed">Visualize your workflow with interactive Kanban boards. Drag and drop tickets across status columns, filter by assignee or priority, and monitor work in progress.</p>
+            </div>
+
+            <!-- Time Tracking -->
+            <div class="bg-white rounded-xl border border-gray-200 p-6 shadow-sm hover:shadow-md transition-shadow duration-200">
+                <div class="flex items-center justify-center w-12 h-12 rounded-lg bg-yellow-100 text-yellow-600 mb-4">
+                    <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                </div>
+                <h3 class="text-lg font-semibold text-gray-900 mb-2">Time Tracking</h3>
+                <p class="text-sm text-gray-600 leading-relaxed">Log time entries against tickets with hours, descriptions, and dates. Generate per-user and per-project time reports to understand where effort is spent.</p>
+            </div>
+
+            <!-- Team Collaboration -->
+            <div class="bg-white rounded-xl border border-gray-200 p-6 shadow-sm hover:shadow-md transition-shadow duration-200">
+                <div class="flex items-center justify-center w-12 h-12 rounded-lg bg-indigo-100 text-indigo-600 mb-4">
+                    <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" /></svg>
+                </div>
+                <h3 class="text-lg font-semibold text-gray-900 mb-2">Team Collaboration</h3>
+                <p class="text-sm text-gray-600 leading-relaxed">Threaded comments on tickets, role-based access control with five distinct roles, department management, and activity feeds to keep everyone aligned.</p>
+            </div>
+
+            <!-- Analytics -->
+            <div class="bg-white rounded-xl border border-gray-200 p-6 shadow-sm hover:shadow-md transition-shadow duration-200">
+                <div class="flex items-center justify-center w-12 h-12 rounded-lg bg-red-100 text-red-600 mb-4">
+                    <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" /></svg>
+                </div>
+                <h3 class="text-lg font-semibold text-gray-900 mb-2">Analytics &amp; Insights</h3>
+                <p class="text-sm text-gray-600 leading-relaxed">Project-level dashboards with ticket distribution charts, sprint velocity metrics, team workload breakdowns, and overdue tracking to make data-driven decisions.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom CTA Section -->
+    <div class="py-12 md:py-16">
+        <div class="bg-primary-600 rounded-2xl px-6 py-10 md:px-12 md:py-14 text-center shadow-lg">
+            <h2 class="text-2xl md:text-3xl font-bold text-white">Ready to streamline your projects?</h2>
+            <p class="mt-3 max-w-lg mx-auto text-base text-primary-100">Join your team on ProjectForge and start delivering with clarity, speed, and confidence.</p>
+            <div class="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
+                {% if user %}
+                <a href="/dashboard" class="inline-flex items-center px-6 py-3 rounded-lg text-base font-semibold text-primary-700 bg-white hover:bg-primary-50 shadow-md hover:shadow-lg transition-all duration-200">
+                    Go to Dashboard
+                </a>
+                <a href="/projects" class="inline-flex items-center px-6 py-3 rounded-lg text-base font-semibold text-white border-2 border-white hover:bg-primary-700 transition-all duration-200">
+                    View Projects
+                </a>
+                {% else %}
+                <a href="/auth/register" class="inline-flex items-center px-6 py-3 rounded-lg text-base font-semibold text-primary-700 bg-white hover:bg-primary-50 shadow-md hover:shadow-lg transition-all duration-200">
+                    Get Started Free
+                </a>
+                <a href="/auth/login" class="inline-flex items-center px-6 py-3 rounded-lg text-base font-semibold text-white border-2 border-white hover:bg-primary-700 transition-all duration-200">
+                    Sign In
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

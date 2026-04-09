@@ -1,0 +1,361 @@
+{% extends "base.html" %}
+
+{% block title %}Kanban Board - {{ project.name }} | ProjectForge{% endblock %}
+
+{% block head %}
+<style>
+    .kanban-board-container {
+        overflow-x: auto;
+        padding-bottom: 1rem;
+    }
+    .kanban-board-container::-webkit-scrollbar {
+        height: 8px;
+    }
+    .kanban-board-container::-webkit-scrollbar-track {
+        background: #f1f5f9;
+        border-radius: 4px;
+    }
+    .kanban-board-container::-webkit-scrollbar-thumb {
+        background: #94a3b8;
+        border-radius: 4px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-transition">
+    <!-- Page Header -->
+    <div class="mb-6">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+                <nav class="flex items-center space-x-2 text-sm text-gray-500 mb-2">
+                    <a href="/projects" class="hover:text-primary-600 transition-colors duration-200">Projects</a>
+                    <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>
+                    <a href="/projects/{{ project.id }}" class="hover:text-primary-600 transition-colors duration-200">{{ project.name }}</a>
+                    <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>
+                    <span class="text-gray-700 font-medium">Board</span>
+                </nav>
+                <h1 class="text-2xl font-bold text-gray-900">Kanban Board</h1>
+                <p class="mt-1 text-sm text-gray-500">{{ project.name }}{% if current_sprint %} &middot; Sprint: {{ current_sprint.name }}{% endif %}</p>
+            </div>
+            <div class="flex items-center space-x-3">
+                <a href="/projects/{{ project.id }}" class="inline-flex items-center px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors duration-200">
+                    <svg class="h-4 w-4 mr-1.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" /></svg>
+                    List View
+                </a>
+                <a href="/projects/{{ project.id }}/tickets/new" class="inline-flex items-center px-3 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 transition-colors duration-200">
+                    <svg class="h-4 w-4 mr-1.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+                    New Ticket
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter Bar -->
+    <div class="bg-white border border-gray-200 rounded-lg p-4 mb-6">
+        <form method="GET" action="/projects/{{ project.id }}/board" class="flex flex-col sm:flex-row sm:items-end gap-3">
+            <div class="flex-1 min-w-0">
+                <label for="filter-sprint" class="block text-xs font-medium text-gray-600 mb-1">Sprint</label>
+                <select id="filter-sprint" name="sprint_id" class="w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-primary-500 focus:ring-primary-500 py-2 px-3 border">
+                    <option value="">All Sprints</option>
+                    {% for sprint in sprints %}
+                    <option value="{{ sprint.id }}" {% if filters.sprint_id == sprint.id|string %}selected{% endif %}>{{ sprint.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="flex-1 min-w-0">
+                <label for="filter-assignee" class="block text-xs font-medium text-gray-600 mb-1">Assignee</label>
+                <select id="filter-assignee" name="assignee_id" class="w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-primary-500 focus:ring-primary-500 py-2 px-3 border">
+                    <option value="">All Assignees</option>
+                    {% for member in members %}
+                    <option value="{{ member.id }}" {% if filters.assignee_id == member.id|string %}selected{% endif %}>{{ member.username }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="flex-1 min-w-0">
+                <label for="filter-priority" class="block text-xs font-medium text-gray-600 mb-1">Priority</label>
+                <select id="filter-priority" name="priority" class="w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-primary-500 focus:ring-primary-500 py-2 px-3 border">
+                    <option value="">All Priorities</option>
+                    <option value="Critical" {% if filters.priority == 'Critical' %}selected{% endif %}>Critical</option>
+                    <option value="High" {% if filters.priority == 'High' %}selected{% endif %}>High</option>
+                    <option value="Medium" {% if filters.priority == 'Medium' %}selected{% endif %}>Medium</option>
+                    <option value="Low" {% if filters.priority == 'Low' %}selected{% endif %}>Low</option>
+                </select>
+            </div>
+            <div class="flex-1 min-w-0">
+                <label for="filter-type" class="block text-xs font-medium text-gray-600 mb-1">Type</label>
+                <select id="filter-type" name="type" class="w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-primary-500 focus:ring-primary-500 py-2 px-3 border">
+                    <option value="">All Types</option>
+                    <option value="Bug" {% if filters.type == 'Bug' %}selected{% endif %}>Bug</option>
+                    <option value="Feature" {% if filters.type == 'Feature' %}selected{% endif %}>Feature</option>
+                    <option value="Task" {% if filters.type == 'Task' %}selected{% endif %}>Task</option>
+                    <option value="Improvement" {% if filters.type == 'Improvement' %}selected{% endif %}>Improvement</option>
+                    <option value="Epic" {% if filters.type == 'Epic' %}selected{% endif %}>Epic</option>
+                </select>
+            </div>
+            <div class="flex-1 min-w-0">
+                <label for="filter-label" class="block text-xs font-medium text-gray-600 mb-1">Label</label>
+                <select id="filter-label" name="label_id" class="w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-primary-500 focus:ring-primary-500 py-2 px-3 border">
+                    <option value="">All Labels</option>
+                    {% for label in labels %}
+                    <option value="{{ label.id }}" {% if filters.label_id == label.id|string %}selected{% endif %}>{{ label.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="flex items-center space-x-2">
+                <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 transition-colors duration-200">
+                    <svg class="h-4 w-4 mr-1.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 01-.659 1.591l-5.432 5.432a2.25 2.25 0 00-.659 1.591v2.927a2.25 2.25 0 01-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 00-.659-1.591L3.659 7.409A2.25 2.25 0 013 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0112 3z" /></svg>
+                    Filter
+                </button>
+                <a href="/projects/{{ project.id }}/board" class="inline-flex items-center px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-600 bg-white hover:bg-gray-50 transition-colors duration-200">
+                    Clear
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Board Summary -->
+    <div class="flex items-center justify-between mb-4">
+        <p class="text-sm text-gray-500">
+            {{ total_tickets }} ticket{{ 's' if total_tickets != 1 else '' }} on board
+        </p>
+        <div class="flex items-center space-x-4 text-xs text-gray-500">
+            <span class="flex items-center">
+                <span class="inline-block w-2 h-2 rounded-full bg-blue-500 mr-1"></span>Open
+            </span>
+            <span class="flex items-center">
+                <span class="inline-block w-2 h-2 rounded-full bg-yellow-500 mr-1"></span>In Progress
+            </span>
+            <span class="flex items-center">
+                <span class="inline-block w-2 h-2 rounded-full bg-purple-500 mr-1"></span>In Review
+            </span>
+            <span class="flex items-center">
+                <span class="inline-block w-2 h-2 rounded-full bg-orange-500 mr-1"></span>QA Testing
+            </span>
+            <span class="flex items-center">
+                <span class="inline-block w-2 h-2 rounded-full bg-green-500 mr-1"></span>Closed
+            </span>
+        </div>
+    </div>
+
+    <!-- Kanban Board -->
+    <div class="kanban-board-container">
+        <div class="kanban-board flex gap-4 min-w-max pb-4">
+
+            <!-- Open Column -->
+            <div class="kanban-column w-72 flex-shrink-0 bg-gray-50 rounded-lg border border-gray-200 flex flex-col max-h-[calc(100vh-280px)]" data-status="Open">
+                <div class="kanban-column-header col-todo flex items-center justify-between px-3 py-3 rounded-t-lg">
+                    <div class="flex items-center space-x-2">
+                        <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                        <span>Open</span>
+                    </div>
+                    <span class="kanban-card-count">{{ columns.open|length }}</span>
+                </div>
+                <div class="kanban-column-body p-2 flex-1 overflow-y-auto space-y-2" data-status="Open">
+                    {% for ticket in columns.open %}
+                    {% include "projects/_ticket_card.html" %}
+                    {% endfor %}
+                    {% if columns.open|length == 0 %}
+                    <div class="text-center py-8 text-sm text-gray-400">
+                        <svg class="h-8 w-8 mx-auto mb-2 text-gray-300" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 13.5h3.86a2.25 2.25 0 012.012 1.244l.256.512a2.25 2.25 0 002.013 1.244h3.218a2.25 2.25 0 002.013-1.244l.256-.512a2.25 2.25 0 012.013-1.244h3.859m-19.5.338V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18v-4.162c0-.224-.034-.447-.1-.661L19.24 5.338a2.25 2.25 0 00-2.15-1.588H6.911a2.25 2.25 0 00-2.15 1.588L2.35 13.177a2.25 2.25 0 00-.1.661z" /></svg>
+                        No tickets
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- In Progress Column -->
+            <div class="kanban-column w-72 flex-shrink-0 bg-gray-50 rounded-lg border border-gray-200 flex flex-col max-h-[calc(100vh-280px)]" data-status="In Progress">
+                <div class="kanban-column-header col-in-progress flex items-center justify-between px-3 py-3 rounded-t-lg">
+                    <div class="flex items-center space-x-2">
+                        <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.985V5.653z" /></svg>
+                        <span>In Progress</span>
+                    </div>
+                    <span class="kanban-card-count">{{ columns.in_progress|length }}</span>
+                </div>
+                <div class="kanban-column-body p-2 flex-1 overflow-y-auto space-y-2" data-status="In Progress">
+                    {% for ticket in columns.in_progress %}
+                    {% include "projects/_ticket_card.html" %}
+                    {% endfor %}
+                    {% if columns.in_progress|length == 0 %}
+                    <div class="text-center py-8 text-sm text-gray-400">
+                        <svg class="h-8 w-8 mx-auto mb-2 text-gray-300" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 13.5h3.86a2.25 2.25 0 012.012 1.244l.256.512a2.25 2.25 0 002.013 1.244h3.218a2.25 2.25 0 002.013-1.244l.256-.512a2.25 2.25 0 012.013-1.244h3.859m-19.5.338V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18v-4.162c0-.224-.034-.447-.1-.661L19.24 5.338a2.25 2.25 0 00-2.15-1.588H6.911a2.25 2.25 0 00-2.15 1.588L2.35 13.177a2.25 2.25 0 00-.1.661z" /></svg>
+                        No tickets
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- In Review Column -->
+            <div class="kanban-column w-72 flex-shrink-0 bg-gray-50 rounded-lg border border-gray-200 flex flex-col max-h-[calc(100vh-280px)]" data-status="In Review">
+                <div class="kanban-column-header col-review flex items-center justify-between px-3 py-3 rounded-t-lg">
+                    <div class="flex items-center space-x-2">
+                        <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                        <span>In Review</span>
+                    </div>
+                    <span class="kanban-card-count">{{ columns.in_review|length }}</span>
+                </div>
+                <div class="kanban-column-body p-2 flex-1 overflow-y-auto space-y-2" data-status="In Review">
+                    {% for ticket in columns.in_review %}
+                    {% include "projects/_ticket_card.html" %}
+                    {% endfor %}
+                    {% if columns.in_review|length == 0 %}
+                    <div class="text-center py-8 text-sm text-gray-400">
+                        <svg class="h-8 w-8 mx-auto mb-2 text-gray-300" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 13.5h3.86a2.25 2.25 0 012.012 1.244l.256.512a2.25 2.25 0 002.013 1.244h3.218a2.25 2.25 0 002.013-1.244l.256-.512a2.25 2.25 0 012.013-1.244h3.859m-19.5.338V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18v-4.162c0-.224-.034-.447-.1-.661L19.24 5.338a2.25 2.25 0 00-2.15-1.588H6.911a2.25 2.25 0 00-2.15 1.588L2.35 13.177a2.25 2.25 0 00-.1.661z" /></svg>
+                        No tickets
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- QA Testing Column -->
+            <div class="kanban-column w-72 flex-shrink-0 bg-gray-50 rounded-lg border border-gray-200 flex flex-col max-h-[calc(100vh-280px)]" data-status="QA Testing">
+                <div class="kanban-column-header flex items-center justify-between px-3 py-3 rounded-t-lg bg-orange-50 border-b-2 border-orange-400 text-orange-700">
+                    <div class="flex items-center space-x-2">
+                        <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15.3M14.25 3.104c.251.023.501.05.75.082M19.8 15.3l-1.57.393A9.065 9.065 0 0112 15a9.065 9.065 0 00-6.23.693L5 14.5m14.8.8l1.402 1.402c1.232 1.232.65 3.318-1.067 3.611A48.309 48.309 0 0112 21c-2.773 0-5.491-.235-8.135-.687-1.718-.293-2.3-2.379-1.067-3.61L5 14.5" /></svg>
+                        <span>QA Testing</span>
+                    </div>
+                    <span class="kanban-card-count">{{ columns.qa_testing|length }}</span>
+                </div>
+                <div class="kanban-column-body p-2 flex-1 overflow-y-auto space-y-2" data-status="QA Testing">
+                    {% for ticket in columns.qa_testing %}
+                    {% include "projects/_ticket_card.html" %}
+                    {% endfor %}
+                    {% if columns.qa_testing|length == 0 %}
+                    <div class="text-center py-8 text-sm text-gray-400">
+                        <svg class="h-8 w-8 mx-auto mb-2 text-gray-300" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 13.5h3.86a2.25 2.25 0 012.012 1.244l.256.512a2.25 2.25 0 002.013 1.244h3.218a2.25 2.25 0 002.013-1.244l.256-.512a2.25 2.25 0 012.013-1.244h3.859m-19.5.338V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18v-4.162c0-.224-.034-.447-.1-.661L19.24 5.338a2.25 2.25 0 00-2.15-1.588H6.911a2.25 2.25 0 00-2.15 1.588L2.35 13.177a2.25 2.25 0 00-.1.661z" /></svg>
+                        No tickets
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Closed Column -->
+            <div class="kanban-column w-72 flex-shrink-0 bg-gray-50 rounded-lg border border-gray-200 flex flex-col max-h-[calc(100vh-280px)]" data-status="Closed">
+                <div class="kanban-column-header col-done flex items-center justify-between px-3 py-3 rounded-t-lg">
+                    <div class="flex items-center space-x-2">
+                        <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                        <span>Closed</span>
+                    </div>
+                    <span class="kanban-card-count">{{ columns.closed|length }}</span>
+                </div>
+                <div class="kanban-column-body p-2 flex-1 overflow-y-auto space-y-2" data-status="Closed">
+                    {% for ticket in columns.closed %}
+                    {% include "projects/_ticket_card.html" %}
+                    {% endfor %}
+                    {% if columns.closed|length == 0 %}
+                    <div class="text-center py-8 text-sm text-gray-400">
+                        <svg class="h-8 w-8 mx-auto mb-2 text-gray-300" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 13.5h3.86a2.25 2.25 0 012.012 1.244l.256.512a2.25 2.25 0 002.013 1.244h3.218a2.25 2.25 0 002.013-1.244l.256-.512a2.25 2.25 0 012.013-1.244h3.859m-19.5.338V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18v-4.162c0-.224-.034-.447-.1-.661L19.24 5.338a2.25 2.25 0 00-2.15-1.588H6.911a2.25 2.25 0 00-2.15 1.588L2.35 13.177a2.25 2.25 0 00-.1.661z" /></svg>
+                        No tickets
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var cards = document.querySelectorAll('.kanban-card');
+    var columns = document.querySelectorAll('.kanban-column-body');
+
+    cards.forEach(function(card) {
+        card.setAttribute('draggable', 'true');
+
+        card.addEventListener('dragstart', function(e) {
+            card.classList.add('dragging');
+            e.dataTransfer.setData('text/plain', card.dataset.ticketId);
+            e.dataTransfer.effectAllowed = 'move';
+        });
+
+        card.addEventListener('dragend', function() {
+            card.classList.remove('dragging');
+            columns.forEach(function(col) {
+                col.closest('.kanban-column').classList.remove('drag-over');
+            });
+        });
+    });
+
+    columns.forEach(function(column) {
+        column.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            column.closest('.kanban-column').classList.add('drag-over');
+        });
+
+        column.addEventListener('dragleave', function(e) {
+            if (!column.contains(e.relatedTarget)) {
+                column.closest('.kanban-column').classList.remove('drag-over');
+            }
+        });
+
+        column.addEventListener('drop', function(e) {
+            e.preventDefault();
+            column.closest('.kanban-column').classList.remove('drag-over');
+
+            var ticketId = e.dataTransfer.getData('text/plain');
+            var newStatus = column.dataset.status;
+            var card = document.querySelector('.kanban-card[data-ticket-id="' + ticketId + '"]');
+
+            if (card && card.parentElement !== column) {
+                // Find the position to insert
+                var afterElement = getDragAfterElement(column, e.clientY);
+                if (afterElement == null) {
+                    column.appendChild(card);
+                } else {
+                    column.insertBefore(card, afterElement);
+                }
+
+                // Update column counts
+                updateColumnCounts();
+
+                // Send status update to server
+                fetch('/projects/{{ project.id }}/tickets/' + ticketId + '/status', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: 'status=' + encodeURIComponent(newStatus)
+                }).then(function(response) {
+                    if (!response.ok) {
+                        // Revert on failure - reload the page
+                        window.location.reload();
+                    }
+                }).catch(function() {
+                    window.location.reload();
+                });
+            }
+        });
+    });
+
+    function getDragAfterElement(container, y) {
+        var draggableElements = Array.from(container.querySelectorAll('.kanban-card:not(.dragging)'));
+
+        return draggableElements.reduce(function(closest, child) {
+            var box = child.getBoundingClientRect();
+            var offset = y - box.top - box.height / 2;
+            if (offset < 0 && offset > closest.offset) {
+                return { offset: offset, element: child };
+            } else {
+                return closest;
+            }
+        }, { offset: Number.NEGATIVE_INFINITY }).element;
+    }
+
+    function updateColumnCounts() {
+        document.querySelectorAll('.kanban-column').forEach(function(col) {
+            var body = col.querySelector('.kanban-column-body');
+            var count = col.querySelector('.kanban-card-count');
+            if (body && count) {
+                var cardCount = body.querySelectorAll('.kanban-card').length;
+                count.textContent = cardCount;
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

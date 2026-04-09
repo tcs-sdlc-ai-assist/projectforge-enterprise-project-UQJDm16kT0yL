@@ -1,0 +1,364 @@
+{% extends "base.html" %}
+
+{% block title %}{% if edit_mode %}Edit Ticket{% else %}Create Ticket{% endif %} - ProjectForge{% endblock %}
+
+{% block content %}
+<div class="page-transition">
+    <!-- Breadcrumbs -->
+    <nav class="flex mb-6" aria-label="Breadcrumb">
+        <ol class="inline-flex items-center space-x-1 md:space-x-3 text-sm">
+            <li class="inline-flex items-center">
+                <a href="/dashboard" class="text-gray-500 hover:text-primary-600 inline-flex items-center">
+                    <svg class="w-4 h-4 mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="m2.25 12 8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
+                    </svg>
+                    Dashboard
+                </a>
+            </li>
+            <li>
+                <div class="flex items-center">
+                    <svg class="w-5 h-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+                    </svg>
+                    <a href="/projects" class="ml-1 text-gray-500 hover:text-primary-600">Projects</a>
+                </div>
+            </li>
+            {% if project %}
+            <li>
+                <div class="flex items-center">
+                    <svg class="w-5 h-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+                    </svg>
+                    <a href="/projects/{{ project.id }}" class="ml-1 text-gray-500 hover:text-primary-600">{{ project.name }}</a>
+                </div>
+            </li>
+            {% endif %}
+            <li>
+                <div class="flex items-center">
+                    <svg class="w-5 h-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+                    </svg>
+                    {% if edit_mode and ticket %}
+                    <a href="/tickets/{{ ticket.id }}" class="ml-1 text-gray-500 hover:text-primary-600">{{ ticket.title }}</a>
+                    {% else %}
+                    <span class="ml-1 text-gray-500">Tickets</span>
+                    {% endif %}
+                </div>
+            </li>
+            <li aria-current="page">
+                <div class="flex items-center">
+                    <svg class="w-5 h-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+                    </svg>
+                    <span class="ml-1 text-gray-700 font-medium">{% if edit_mode %}Edit{% else %}Create{% endif %}</span>
+                </div>
+            </li>
+        </ol>
+    </nav>
+
+    <!-- Page Header -->
+    <div class="mb-8">
+        <h1 class="text-2xl font-bold text-gray-900">{% if edit_mode %}Edit Ticket{% else %}Create New Ticket{% endif %}</h1>
+        <p class="mt-1 text-sm text-gray-600">
+            {% if edit_mode %}
+            Update the ticket details below.
+            {% else %}
+            Fill in the details below to create a new ticket.
+            {% endif %}
+        </p>
+    </div>
+
+    <!-- Form -->
+    <div class="bg-white shadow-sm rounded-lg border border-gray-200">
+        <form method="POST" action="{% if edit_mode %}/tickets/{{ ticket.id }}/edit{% else %}/tickets/create{% endif %}" class="p-6 space-y-6">
+            {% if errors %}
+            <div class="rounded-md bg-red-50 border border-red-200 p-4">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <svg class="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+                        </svg>
+                    </div>
+                    <div class="ml-3">
+                        <h3 class="text-sm font-medium text-red-800">There were errors with your submission</h3>
+                        <div class="mt-2 text-sm text-red-700">
+                            <ul class="list-disc list-inside space-y-1">
+                                {% for error in errors %}
+                                <li>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Left Column -->
+                <div class="space-y-6 lg:col-span-2">
+                    <!-- Title -->
+                    <div>
+                        <label for="title" class="block text-sm font-medium text-gray-700 mb-1">
+                            Title <span class="text-red-500">*</span>
+                        </label>
+                        <input type="text" name="title" id="title"
+                            value="{{ form_data.title if form_data and form_data.title else (ticket.title if edit_mode and ticket else '') }}"
+                            required
+                            placeholder="Enter a descriptive ticket title"
+                            class="block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-400 focus:border-primary-500 focus:ring-1 focus:ring-primary-500 sm:text-sm">
+                        {% if field_errors and field_errors.title %}
+                        <p class="mt-1 text-sm text-red-600">{{ field_errors.title }}</p>
+                        {% endif %}
+                    </div>
+
+                    <!-- Description -->
+                    <div>
+                        <label for="description" class="block text-sm font-medium text-gray-700 mb-1">
+                            Description
+                        </label>
+                        <textarea name="description" id="description" rows="6"
+                            placeholder="Provide a detailed description of the ticket..."
+                            class="block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-400 focus:border-primary-500 focus:ring-1 focus:ring-primary-500 sm:text-sm">{{ form_data.description if form_data and form_data.description else (ticket.description if edit_mode and ticket and ticket.description else '') }}</textarea>
+                        {% if field_errors and field_errors.description %}
+                        <p class="mt-1 text-sm text-red-600">{{ field_errors.description }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Project (for create mode) -->
+                {% if not edit_mode %}
+                <div>
+                    <label for="project_id" class="block text-sm font-medium text-gray-700 mb-1">
+                        Project <span class="text-red-500">*</span>
+                    </label>
+                    <select name="project_id" id="project_id" required
+                        class="block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:border-primary-500 focus:ring-1 focus:ring-primary-500 sm:text-sm">
+                        <option value="">Select a project</option>
+                        {% if projects %}
+                        {% for p in projects %}
+                        <option value="{{ p.id }}"
+                            {% if (form_data and form_data.project_id and form_data.project_id|string == p.id|string) or (project and project.id == p.id) %}selected{% endif %}>
+                            {{ p.name }}
+                        </option>
+                        {% endfor %}
+                        {% endif %}
+                    </select>
+                    {% if field_errors and field_errors.project_id %}
+                    <p class="mt-1 text-sm text-red-600">{{ field_errors.project_id }}</p>
+                    {% endif %}
+                </div>
+                {% else %}
+                <input type="hidden" name="project_id" value="{{ ticket.project_id if ticket else '' }}">
+                {% endif %}
+
+                <!-- Type -->
+                <div>
+                    <label for="type" class="block text-sm font-medium text-gray-700 mb-1">
+                        Type <span class="text-red-500">*</span>
+                    </label>
+                    <select name="type" id="type" required
+                        class="block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:border-primary-500 focus:ring-1 focus:ring-primary-500 sm:text-sm">
+                        <option value="">Select type</option>
+                        {% set current_type = form_data.type if form_data and form_data.type else (ticket.type if edit_mode and ticket else '') %}
+                        <option value="Bug" {% if current_type == 'Bug' %}selected{% endif %}>🐛 Bug</option>
+                        <option value="Feature" {% if current_type == 'Feature' %}selected{% endif %}>✨ Feature</option>
+                        <option value="Task" {% if current_type == 'Task' %}selected{% endif %}>📋 Task</option>
+                        <option value="Improvement" {% if current_type == 'Improvement' %}selected{% endif %}>🔧 Improvement</option>
+                        <option value="Epic" {% if current_type == 'Epic' %}selected{% endif %}>🏔️ Epic</option>
+                    </select>
+                    {% if field_errors and field_errors.type %}
+                    <p class="mt-1 text-sm text-red-600">{{ field_errors.type }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- Priority -->
+                <div>
+                    <label for="priority" class="block text-sm font-medium text-gray-700 mb-1">
+                        Priority <span class="text-red-500">*</span>
+                    </label>
+                    <select name="priority" id="priority" required
+                        class="block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:border-primary-500 focus:ring-1 focus:ring-primary-500 sm:text-sm">
+                        <option value="">Select priority</option>
+                        {% set current_priority = form_data.priority if form_data and form_data.priority else (ticket.priority if edit_mode and ticket else '') %}
+                        <option value="Critical" {% if current_priority == 'Critical' %}selected{% endif %}>🔴 Critical</option>
+                        <option value="High" {% if current_priority == 'High' %}selected{% endif %}>🟠 High</option>
+                        <option value="Medium" {% if current_priority == 'Medium' %}selected{% endif %}>🟡 Medium</option>
+                        <option value="Low" {% if current_priority == 'Low' %}selected{% endif %}>🟢 Low</option>
+                    </select>
+                    {% if field_errors and field_errors.priority %}
+                    <p class="mt-1 text-sm text-red-600">{{ field_errors.priority }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- Status (edit only) -->
+                {% if edit_mode %}
+                <div>
+                    <label for="status" class="block text-sm font-medium text-gray-700 mb-1">
+                        Status <span class="text-red-500">*</span>
+                    </label>
+                    <select name="status" id="status" required
+                        class="block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:border-primary-500 focus:ring-1 focus:ring-primary-500 sm:text-sm">
+                        {% set current_status = form_data.status if form_data and form_data.status else (ticket.status if ticket else '') %}
+                        <option value="Open" {% if current_status == 'Open' %}selected{% endif %}>Open</option>
+                        <option value="In Progress" {% if current_status == 'In Progress' %}selected{% endif %}>In Progress</option>
+                        <option value="In Review" {% if current_status == 'In Review' %}selected{% endif %}>In Review</option>
+                        <option value="QA Testing" {% if current_status == 'QA Testing' %}selected{% endif %}>QA Testing</option>
+                        <option value="Closed" {% if current_status == 'Closed' %}selected{% endif %}>Closed</option>
+                        <option value="Reopened" {% if current_status == 'Reopened' %}selected{% endif %}>Reopened</option>
+                    </select>
+                    {% if field_errors and field_errors.status %}
+                    <p class="mt-1 text-sm text-red-600">{{ field_errors.status }}</p>
+                    {% endif %}
+                </div>
+                {% endif %}
+
+                <!-- Assignee -->
+                <div>
+                    <label for="assignee_id" class="block text-sm font-medium text-gray-700 mb-1">
+                        Assignee
+                    </label>
+                    <select name="assignee_id" id="assignee_id"
+                        class="block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:border-primary-500 focus:ring-1 focus:ring-primary-500 sm:text-sm">
+                        <option value="">Unassigned</option>
+                        {% set current_assignee = form_data.assignee_id if form_data and form_data.assignee_id else (ticket.assignee_id|string if edit_mode and ticket and ticket.assignee_id else '') %}
+                        {% if members %}
+                        {% for member in members %}
+                        <option value="{{ member.id }}" {% if current_assignee|string == member.id|string %}selected{% endif %}>
+                            {{ member.username }}{% if member.role %} ({{ member.role }}){% endif %}
+                        </option>
+                        {% endfor %}
+                        {% endif %}
+                    </select>
+                    {% if field_errors and field_errors.assignee_id %}
+                    <p class="mt-1 text-sm text-red-600">{{ field_errors.assignee_id }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- Sprint -->
+                <div>
+                    <label for="sprint_id" class="block text-sm font-medium text-gray-700 mb-1">
+                        Sprint
+                    </label>
+                    <select name="sprint_id" id="sprint_id"
+                        class="block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:border-primary-500 focus:ring-1 focus:ring-primary-500 sm:text-sm">
+                        <option value="">No Sprint (Backlog)</option>
+                        {% set current_sprint = form_data.sprint_id if form_data and form_data.sprint_id else (ticket.sprint_id|string if edit_mode and ticket and ticket.sprint_id else '') %}
+                        {% if sprints %}
+                        {% for sprint in sprints %}
+                        <option value="{{ sprint.id }}" {% if current_sprint|string == sprint.id|string %}selected{% endif %}>
+                            {{ sprint.name }}
+                            {% if sprint.status %} ({{ sprint.status }}){% endif %}
+                        </option>
+                        {% endfor %}
+                        {% endif %}
+                    </select>
+                    {% if field_errors and field_errors.sprint_id %}
+                    <p class="mt-1 text-sm text-red-600">{{ field_errors.sprint_id }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- Parent Ticket (for subtasks) -->
+                <div>
+                    <label for="parent_id" class="block text-sm font-medium text-gray-700 mb-1">
+                        Parent Ticket
+                    </label>
+                    <select name="parent_id" id="parent_id"
+                        class="block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:border-primary-500 focus:ring-1 focus:ring-primary-500 sm:text-sm">
+                        <option value="">None (top-level ticket)</option>
+                        {% set current_parent = form_data.parent_id if form_data and form_data.parent_id else (ticket.parent_id|string if edit_mode and ticket and ticket.parent_id else '') %}
+                        {% if parent_tickets %}
+                        {% for parent in parent_tickets %}
+                        {% if not edit_mode or (ticket and parent.id != ticket.id) %}
+                        <option value="{{ parent.id }}" {% if current_parent|string == parent.id|string %}selected{% endif %}>
+                            {{ parent.title }}
+                        </option>
+                        {% endif %}
+                        {% endfor %}
+                        {% endif %}
+                    </select>
+                    <p class="mt-1 text-xs text-gray-500">Select a parent ticket to make this a subtask.</p>
+                    {% if field_errors and field_errors.parent_id %}
+                    <p class="mt-1 text-sm text-red-600">{{ field_errors.parent_id }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- Due Date -->
+                <div>
+                    <label for="due_date" class="block text-sm font-medium text-gray-700 mb-1">
+                        Due Date
+                    </label>
+                    <input type="date" name="due_date" id="due_date"
+                        value="{{ form_data.due_date if form_data and form_data.due_date else (ticket.due_date.strftime('%Y-%m-%d') if edit_mode and ticket and ticket.due_date else '') }}"
+                        class="block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:border-primary-500 focus:ring-1 focus:ring-primary-500 sm:text-sm">
+                    {% if field_errors and field_errors.due_date %}
+                    <p class="mt-1 text-sm text-red-600">{{ field_errors.due_date }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Labels (multi-select checkboxes) -->
+            {% if labels %}
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Labels
+                </label>
+                <div class="border border-gray-200 rounded-md p-4 bg-gray-50 max-h-48 overflow-y-auto">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                        {% set selected_label_ids = form_data.label_ids if form_data and form_data.label_ids else (ticket_label_ids if edit_mode and ticket_label_ids else []) %}
+                        {% for label in labels %}
+                        <label class="inline-flex items-center cursor-pointer group">
+                            <input type="checkbox" name="label_ids" value="{{ label.id }}"
+                                {% if label.id|string in selected_label_ids|map('string')|list or label.id in selected_label_ids %}checked{% endif %}
+                                class="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500">
+                            <span class="ml-2 flex items-center text-sm text-gray-700 group-hover:text-gray-900">
+                                {% if label.color %}
+                                <span class="inline-block w-3 h-3 rounded-full mr-1.5 flex-shrink-0" style="background-color: {{ label.color }};"></span>
+                                {% endif %}
+                                {{ label.name }}
+                            </span>
+                        </label>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% if field_errors and field_errors.label_ids %}
+                <p class="mt-1 text-sm text-red-600">{{ field_errors.label_ids }}</p>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            <!-- Form Actions -->
+            <div class="flex items-center justify-end space-x-3 pt-4 border-t border-gray-200">
+                <a href="{% if edit_mode and ticket %}/tickets/{{ ticket.id }}{% elif project %}/projects/{{ project.id }}{% else %}/projects{% endif %}"
+                    class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors duration-200">
+                    Cancel
+                </a>
+                <button type="submit"
+                    class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors duration-200">
+                    {% if edit_mode %}
+                    <svg class="w-4 h-4 mr-1.5 -ml-0.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+                    </svg>
+                    Update Ticket
+                    {% else %}
+                    <svg class="w-4 h-4 mr-1.5 -ml-0.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                    </svg>
+                    Create Ticket
+                    {% endif %}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var titleInput = document.getElementById('title');
+        if (titleInput && !titleInput.value) {
+            titleInput.focus();
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,201 @@
+{% extends "base.html" %}
+
+{% block title %}{% if project %}Edit Project - {{ project.name }}{% else %}Create Project{% endif %} | ProjectForge{% endblock %}
+
+{% block content %}
+<div class="page-transition">
+    <!-- Breadcrumbs -->
+    <nav class="flex mb-6" aria-label="Breadcrumb">
+        <ol class="inline-flex items-center space-x-1 md:space-x-3">
+            <li class="inline-flex items-center">
+                <a href="/dashboard" class="inline-flex items-center text-sm font-medium text-gray-500 hover:text-primary-600 transition-colors duration-200">
+                    <svg class="w-4 h-4 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="m2.25 12 8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
+                    </svg>
+                    Dashboard
+                </a>
+            </li>
+            <li>
+                <div class="flex items-center">
+                    <svg class="w-5 h-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+                    </svg>
+                    <a href="/projects" class="ml-1 text-sm font-medium text-gray-500 hover:text-primary-600 transition-colors duration-200 md:ml-2">Projects</a>
+                </div>
+            </li>
+            {% if project %}
+            <li>
+                <div class="flex items-center">
+                    <svg class="w-5 h-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+                    </svg>
+                    <a href="/projects/{{ project.id }}" class="ml-1 text-sm font-medium text-gray-500 hover:text-primary-600 transition-colors duration-200 md:ml-2">{{ project.name }}</a>
+                </div>
+            </li>
+            <li aria-current="page">
+                <div class="flex items-center">
+                    <svg class="w-5 h-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+                    </svg>
+                    <span class="ml-1 text-sm font-medium text-gray-700 md:ml-2">Edit</span>
+                </div>
+            </li>
+            {% else %}
+            <li aria-current="page">
+                <div class="flex items-center">
+                    <svg class="w-5 h-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+                    </svg>
+                    <span class="ml-1 text-sm font-medium text-gray-700 md:ml-2">Create</span>
+                </div>
+            </li>
+            {% endif %}
+        </ol>
+    </nav>
+
+    <!-- Page Header -->
+    <div class="mb-8">
+        <h1 class="text-2xl font-bold text-gray-900">
+            {% if project %}Edit Project{% else %}Create New Project{% endif %}
+        </h1>
+        <p class="mt-1 text-sm text-gray-500">
+            {% if project %}Update the project details below.{% else %}Fill in the details below to create a new project.{% endif %}
+        </p>
+    </div>
+
+    <!-- Form Card -->
+    <div class="bg-white shadow-sm rounded-lg border border-gray-200">
+        <form method="POST" action="{% if project %}/projects/{{ project.id }}/edit{% else %}/projects/create{% endif %}" class="p-6 space-y-6">
+
+            <!-- Validation Errors -->
+            {% if errors %}
+            <div class="rounded-lg bg-red-50 border border-red-200 p-4">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <svg class="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+                        </svg>
+                    </div>
+                    <div class="ml-3">
+                        <h3 class="text-sm font-medium text-red-800">There were errors with your submission</h3>
+                        <div class="mt-2 text-sm text-red-700">
+                            <ul class="list-disc pl-5 space-y-1">
+                                {% for error in errors %}
+                                <li>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Project Name -->
+            <div>
+                <label for="name" class="block text-sm font-medium text-gray-700 mb-1">
+                    Project Name <span class="text-red-500">*</span>
+                </label>
+                <input
+                    type="text"
+                    id="name"
+                    name="name"
+                    value="{{ form_data.name if form_data and form_data.name else (project.name if project else '') }}"
+                    required
+                    maxlength="200"
+                    placeholder="Enter project name"
+                    class="block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-400 text-sm shadow-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition-colors duration-200"
+                    aria-describedby="name-help"
+                >
+                <p id="name-help" class="mt-1 text-xs text-gray-500">A unique, descriptive name for the project.</p>
+            </div>
+
+            <!-- Description -->
+            <div>
+                <label for="description" class="block text-sm font-medium text-gray-700 mb-1">
+                    Description
+                </label>
+                <textarea
+                    id="description"
+                    name="description"
+                    rows="4"
+                    maxlength="2000"
+                    placeholder="Describe the project goals, scope, and key deliverables..."
+                    class="block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-400 text-sm shadow-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition-colors duration-200"
+                    aria-describedby="description-help"
+                >{{ form_data.description if form_data and form_data.description else (project.description if project and project.description else '') }}</textarea>
+                <p id="description-help" class="mt-1 text-xs text-gray-500">Optional. Provide context about the project.</p>
+            </div>
+
+            <!-- Status -->
+            <div>
+                <label for="status" class="block text-sm font-medium text-gray-700 mb-1">
+                    Status <span class="text-red-500">*</span>
+                </label>
+                {% set current_status = form_data.status if form_data and form_data.status else (project.status if project else 'Planning') %}
+                <select
+                    id="status"
+                    name="status"
+                    required
+                    class="block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 text-sm shadow-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition-colors duration-200"
+                    aria-describedby="status-help"
+                >
+                    <option value="Planning" {% if current_status == 'Planning' %}selected{% endif %}>Planning</option>
+                    <option value="Active" {% if current_status == 'Active' %}selected{% endif %}>Active</option>
+                    <option value="On Hold" {% if current_status == 'On Hold' %}selected{% endif %}>On Hold</option>
+                    <option value="Completed" {% if current_status == 'Completed' %}selected{% endif %}>Completed</option>
+                    <option value="Archived" {% if current_status == 'Archived' %}selected{% endif %}>Archived</option>
+                </select>
+                <p id="status-help" class="mt-1 text-xs text-gray-500">Current status of the project.</p>
+            </div>
+
+            <!-- Department -->
+            <div>
+                <label for="department_id" class="block text-sm font-medium text-gray-700 mb-1">
+                    Department
+                </label>
+                {% set current_department_id = form_data.department_id if form_data and form_data.department_id else (project.department_id if project and project.department_id else '') %}
+                <select
+                    id="department_id"
+                    name="department_id"
+                    class="block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 text-sm shadow-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition-colors duration-200"
+                    aria-describedby="department-help"
+                >
+                    <option value="">— No Department —</option>
+                    {% if departments %}
+                    {% for department in departments %}
+                    <option value="{{ department.id }}" {% if current_department_id|string == department.id|string %}selected{% endif %}>{{ department.name }}</option>
+                    {% endfor %}
+                    {% endif %}
+                </select>
+                <p id="department-help" class="mt-1 text-xs text-gray-500">Optional. Assign this project to a department.</p>
+            </div>
+
+            <!-- Form Actions -->
+            <div class="flex items-center justify-end space-x-3 pt-4 border-t border-gray-200">
+                <a
+                    href="{% if project %}/projects/{{ project.id }}{% else %}/projects{% endif %}"
+                    class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors duration-200"
+                >
+                    Cancel
+                </a>
+                <button
+                    type="submit"
+                    class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-primary-600 border border-transparent rounded-md shadow-sm hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors duration-200"
+                >
+                    {% if project %}
+                    <svg class="w-4 h-4 mr-2 -ml-0.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
+                    </svg>
+                    Update Project
+                    {% else %}
+                    <svg class="w-4 h-4 mr-2 -ml-0.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                    </svg>
+                    Create Project
+                    {% endif %}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,507 @@
+{% extends "base.html" %}
+
+{% block title %}Tickets - ProjectForge{% endblock %}
+
+{% block content %}
+<div class="page-transition">
+    <!-- Breadcrumbs -->
+    <nav class="flex mb-6" aria-label="Breadcrumb">
+        <ol class="inline-flex items-center space-x-1 md:space-x-3 text-sm">
+            <li class="inline-flex items-center">
+                <a href="/dashboard" class="text-gray-500 hover:text-primary-600 inline-flex items-center">
+                    <svg class="w-4 h-4 mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m2.25 12 8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" /></svg>
+                    Dashboard
+                </a>
+            </li>
+            {% if project %}
+            <li>
+                <div class="flex items-center">
+                    <svg class="w-5 h-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" /></svg>
+                    <a href="/projects/{{ project.id }}" class="ml-1 text-gray-500 hover:text-primary-600">{{ project.name }}</a>
+                </div>
+            </li>
+            {% endif %}
+            <li aria-current="page">
+                <div class="flex items-center">
+                    <svg class="w-5 h-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" /></svg>
+                    <span class="ml-1 text-gray-700 font-medium">Tickets</span>
+                </div>
+            </li>
+        </ol>
+    </nav>
+
+    <!-- Page Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-900">Tickets</h1>
+            <p class="mt-1 text-sm text-gray-500">
+                {% if total_count is defined and total_count is not none %}
+                    {{ total_count }} ticket{{ 's' if total_count != 1 else '' }} found
+                {% endif %}
+            </p>
+        </div>
+        {% if user and user.role in ['Super Admin', 'Project Manager', 'Developer', 'QA'] %}
+        <div class="mt-4 sm:mt-0">
+            <a href="/tickets/create{% if project %}?project_id={{ project.id }}{% endif %}" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors duration-200">
+                <svg class="w-4 h-4 mr-2 -ml-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+                Create Ticket
+            </a>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Search and Filters -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
+        <form method="GET" action="/tickets" id="filter-form">
+            {% if project %}
+            <input type="hidden" name="project_id" value="{{ project.id }}">
+            {% endif %}
+
+            <!-- Search Bar -->
+            <div class="mb-4">
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" /></svg>
+                    </div>
+                    <input type="text" name="search" value="{{ filters.search if filters and filters.search else '' }}" placeholder="Search tickets by title or description..." class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                </div>
+            </div>
+
+            <!-- Filter Dropdowns -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+                <!-- Status Filter -->
+                <div>
+                    <label for="status" class="block text-xs font-medium text-gray-600 mb-1">Status</label>
+                    <select name="status" id="status" class="block w-full border border-gray-300 rounded-md text-sm py-1.5 px-2 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                        <option value="">All Statuses</option>
+                        {% for s in ['Open', 'In Progress', 'In Review', 'QA Testing', 'Closed', 'Reopened'] %}
+                        <option value="{{ s }}" {% if filters and filters.status == s %}selected{% endif %}>{{ s }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Type Filter -->
+                <div>
+                    <label for="ticket_type" class="block text-xs font-medium text-gray-600 mb-1">Type</label>
+                    <select name="ticket_type" id="ticket_type" class="block w-full border border-gray-300 rounded-md text-sm py-1.5 px-2 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                        <option value="">All Types</option>
+                        {% for t in ['Bug', 'Feature', 'Task', 'Improvement', 'Epic'] %}
+                        <option value="{{ t }}" {% if filters and filters.ticket_type == t %}selected{% endif %}>{{ t }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Priority Filter -->
+                <div>
+                    <label for="priority" class="block text-xs font-medium text-gray-600 mb-1">Priority</label>
+                    <select name="priority" id="priority" class="block w-full border border-gray-300 rounded-md text-sm py-1.5 px-2 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                        <option value="">All Priorities</option>
+                        {% for p in ['Critical', 'High', 'Medium', 'Low'] %}
+                        <option value="{{ p }}" {% if filters and filters.priority == p %}selected{% endif %}>{{ p }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Assignee Filter -->
+                <div>
+                    <label for="assignee_id" class="block text-xs font-medium text-gray-600 mb-1">Assignee</label>
+                    <select name="assignee_id" id="assignee_id" class="block w-full border border-gray-300 rounded-md text-sm py-1.5 px-2 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                        <option value="">All Assignees</option>
+                        {% if assignees %}
+                        {% for a in assignees %}
+                        <option value="{{ a.id }}" {% if filters and filters.assignee_id|string == a.id|string %}selected{% endif %}>{{ a.display_name if a.display_name else a.username }}</option>
+                        {% endfor %}
+                        {% endif %}
+                    </select>
+                </div>
+
+                <!-- Sprint Filter -->
+                <div>
+                    <label for="sprint_id" class="block text-xs font-medium text-gray-600 mb-1">Sprint</label>
+                    <select name="sprint_id" id="sprint_id" class="block w-full border border-gray-300 rounded-md text-sm py-1.5 px-2 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                        <option value="">All Sprints</option>
+                        {% if sprints %}
+                        {% for sp in sprints %}
+                        <option value="{{ sp.id }}" {% if filters and filters.sprint_id|string == sp.id|string %}selected{% endif %}>{{ sp.name }}</option>
+                        {% endfor %}
+                        {% endif %}
+                    </select>
+                </div>
+
+                <!-- Label Filter -->
+                <div>
+                    <label for="label_id" class="block text-xs font-medium text-gray-600 mb-1">Label</label>
+                    <select name="label_id" id="label_id" class="block w-full border border-gray-300 rounded-md text-sm py-1.5 px-2 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                        <option value="">All Labels</option>
+                        {% if labels %}
+                        {% for l in labels %}
+                        <option value="{{ l.id }}" {% if filters and filters.label_id|string == l.id|string %}selected{% endif %}>{{ l.name }}</option>
+                        {% endfor %}
+                        {% endif %}
+                    </select>
+                </div>
+            </div>
+
+            <!-- Filter Actions -->
+            <div class="flex items-center justify-between mt-4 pt-3 border-t border-gray-100">
+                <div class="flex items-center space-x-3">
+                    <button type="submit" class="inline-flex items-center px-3 py-1.5 border border-transparent rounded-md text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors duration-200">
+                        <svg class="w-4 h-4 mr-1.5 -ml-0.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 0 1-.659 1.591l-5.432 5.432a2.25 2.25 0 0 0-.659 1.591v2.927a2.25 2.25 0 0 1-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 0 0-.659-1.591L3.659 7.409A2.25 2.25 0 0 1 3 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0 1 12 3Z" /></svg>
+                        Apply Filters
+                    </button>
+                    <a href="/tickets{% if project %}?project_id={{ project.id }}{% endif %}" class="inline-flex items-center px-3 py-1.5 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors duration-200">
+                        Clear Filters
+                    </a>
+                </div>
+                <div class="hidden sm:flex items-center text-xs text-gray-500">
+                    <label for="sort" class="mr-2">Sort by:</label>
+                    <select name="sort" id="sort" class="border border-gray-300 rounded-md text-xs py-1 px-2 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                        <option value="created_desc" {% if filters and filters.sort == 'created_desc' %}selected{% endif %}>Newest First</option>
+                        <option value="created_asc" {% if filters and filters.sort == 'created_asc' %}selected{% endif %}>Oldest First</option>
+                        <option value="priority_desc" {% if filters and filters.sort == 'priority_desc' %}selected{% endif %}>Priority (High→Low)</option>
+                        <option value="priority_asc" {% if filters and filters.sort == 'priority_asc' %}selected{% endif %}>Priority (Low→High)</option>
+                        <option value="due_date_asc" {% if filters and filters.sort == 'due_date_asc' %}selected{% endif %}>Due Date (Earliest)</option>
+                        <option value="title_asc" {% if filters and filters.sort == 'title_asc' %}selected{% endif %}>Title (A→Z)</option>
+                    </select>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Tickets Table -->
+    {% if tickets and tickets|length > 0 %}
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+        <!-- Desktop Table View -->
+        <div class="hidden md:block overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ticket</th>
+                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Priority</th>
+                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Assignee</th>
+                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sprint</th>
+                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Labels</th>
+                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Due Date</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for ticket in tickets %}
+                    <tr class="table-row-hover">
+                        <td class="px-4 py-3">
+                            <div class="flex flex-col">
+                                <a href="/tickets/{{ ticket.id }}" class="text-sm font-medium text-primary-600 hover:text-primary-800 hover:underline line-clamp-1">
+                                    {{ ticket.title }}
+                                </a>
+                                {% if ticket.project %}
+                                <span class="text-xs text-gray-400 mt-0.5">{{ ticket.project.name }}</span>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td class="px-4 py-3 whitespace-nowrap">
+                            {% set status_class = {
+                                'Open': 'badge-status-open',
+                                'In Progress': 'badge-status-in-progress',
+                                'In Review': 'badge-status-in-review',
+                                'QA Testing': 'badge-status-in-review',
+                                'Closed': 'badge-status-closed',
+                                'Reopened': 'badge-status-open'
+                            } %}
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium {{ status_class.get(ticket.status, 'badge-status-open') }}">
+                                {{ ticket.status }}
+                            </span>
+                        </td>
+                        <td class="px-4 py-3 whitespace-nowrap">
+                            {% set type_class = {
+                                'Bug': 'badge-type-bug',
+                                'Feature': 'badge-type-feature',
+                                'Task': 'badge-type-task',
+                                'Improvement': 'badge-type-story',
+                                'Epic': 'badge-type-epic'
+                            } %}
+                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium {{ type_class.get(ticket.ticket_type, 'bg-gray-100 text-gray-700') }}">
+                                {% if ticket.ticket_type == 'Bug' %}
+                                <svg class="w-3 h-3 mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 12.75c1.148 0 2.278.08 3.383.237 1.037.146 1.866.966 1.866 2.013 0 3.728-2.35 6.75-5.25 6.75S6.75 18.728 6.75 15c0-1.046.83-1.867 1.866-2.013A24.204 24.204 0 0 1 12 12.75Zm0 0c2.883 0 5.647.508 8.207 1.44a23.91 23.91 0 0 1-1.152-6.135c-.22-2.058-1.907-3.555-3.97-3.555h-6.17c-2.063 0-3.75 1.497-3.97 3.555a23.867 23.867 0 0 1-1.152 6.135A23.362 23.362 0 0 1 12 12.75ZM9.75 8.25h4.5" /></svg>
+                                {% elif ticket.ticket_type == 'Feature' %}
+                                <svg class="w-3 h-3 mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 0 0-2.455 2.456ZM16.894 20.567 16.5 21.75l-.394-1.183a2.25 2.25 0 0 0-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 0 0 1.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 0 0 1.423 1.423l1.183.394-1.183.394a2.25 2.25 0 0 0-1.423 1.423Z" /></svg>
+                                {% elif ticket.ticket_type == 'Task' %}
+                                <svg class="w-3 h-3 mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>
+                                {% elif ticket.ticket_type == 'Epic' %}
+                                <svg class="w-3 h-3 mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m3.75 13.5 10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75Z" /></svg>
+                                {% else %}
+                                <svg class="w-3 h-3 mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75Z" /></svg>
+                                {% endif %}
+                                {{ ticket.ticket_type }}
+                            </span>
+                        </td>
+                        <td class="px-4 py-3 whitespace-nowrap">
+                            {% set priority_class = {
+                                'Critical': 'badge-priority-critical',
+                                'High': 'badge-priority-high',
+                                'Medium': 'badge-priority-medium',
+                                'Low': 'badge-priority-low'
+                            } %}
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium {{ priority_class.get(ticket.priority, 'bg-gray-100 text-gray-700') }}">
+                                {% if ticket.priority == 'Critical' %}
+                                <span class="w-1.5 h-1.5 rounded-full bg-red-500 mr-1.5 pulse-dot"></span>
+                                {% elif ticket.priority == 'High' %}
+                                <span class="w-1.5 h-1.5 rounded-full bg-orange-500 mr-1.5"></span>
+                                {% elif ticket.priority == 'Medium' %}
+                                <span class="w-1.5 h-1.5 rounded-full bg-yellow-500 mr-1.5"></span>
+                                {% else %}
+                                <span class="w-1.5 h-1.5 rounded-full bg-green-500 mr-1.5"></span>
+                                {% endif %}
+                                {{ ticket.priority }}
+                            </span>
+                        </td>
+                        <td class="px-4 py-3 whitespace-nowrap">
+                            {% if ticket.assignee %}
+                            <div class="flex items-center">
+                                <div class="avatar-placeholder w-6 h-6 text-xs mr-2">
+                                    {{ (ticket.assignee.display_name if ticket.assignee.display_name else ticket.assignee.username)[0] }}
+                                </div>
+                                <span class="text-sm text-gray-700">{{ ticket.assignee.display_name if ticket.assignee.display_name else ticket.assignee.username }}</span>
+                            </div>
+                            {% else %}
+                            <span class="text-sm text-gray-400 italic">Unassigned</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-4 py-3 whitespace-nowrap">
+                            {% if ticket.sprint %}
+                            <span class="text-sm text-gray-700">{{ ticket.sprint.name }}</span>
+                            {% else %}
+                            <span class="text-sm text-gray-400 italic">Backlog</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-4 py-3">
+                            {% if ticket.labels and ticket.labels|length > 0 %}
+                            <div class="flex flex-wrap gap-1">
+                                {% for label in ticket.labels[:3] %}
+                                <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium" style="background-color: {{ label.color }}20; color: {{ label.color }}; border: 1px solid {{ label.color }}40;">
+                                    {{ label.name }}
+                                </span>
+                                {% endfor %}
+                                {% if ticket.labels|length > 3 %}
+                                <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-600">
+                                    +{{ ticket.labels|length - 3 }}
+                                </span>
+                                {% endif %}
+                            </div>
+                            {% else %}
+                            <span class="text-xs text-gray-400">—</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-4 py-3 whitespace-nowrap">
+                            {% if ticket.due_date %}
+                            {% set today = None %}
+                            <span class="text-sm {% if ticket.is_overdue is defined and ticket.is_overdue %}text-red-600 font-medium{% else %}text-gray-700{% endif %}">
+                                {{ ticket.due_date.strftime('%b %d, %Y') if ticket.due_date else '' }}
+                                {% if ticket.is_overdue is defined and ticket.is_overdue %}
+                                <svg class="inline w-3.5 h-3.5 ml-0.5 text-red-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" /></svg>
+                                {% endif %}
+                            </span>
+                            {% else %}
+                            <span class="text-sm text-gray-400">—</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Mobile Card View -->
+        <div class="md:hidden divide-y divide-gray-200">
+            {% for ticket in tickets %}
+            <a href="/tickets/{{ ticket.id }}" class="block p-4 hover:bg-gray-50 transition-colors duration-150">
+                <div class="flex items-start justify-between mb-2">
+                    <h3 class="text-sm font-medium text-primary-600 line-clamp-2 flex-1 mr-2">{{ ticket.title }}</h3>
+                    {% set priority_class = {
+                        'Critical': 'badge-priority-critical',
+                        'High': 'badge-priority-high',
+                        'Medium': 'badge-priority-medium',
+                        'Low': 'badge-priority-low'
+                    } %}
+                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium flex-shrink-0 {{ priority_class.get(ticket.priority, 'bg-gray-100 text-gray-700') }}">
+                        {{ ticket.priority }}
+                    </span>
+                </div>
+                <div class="flex flex-wrap items-center gap-2 mb-2">
+                    {% set status_class = {
+                        'Open': 'badge-status-open',
+                        'In Progress': 'badge-status-in-progress',
+                        'In Review': 'badge-status-in-review',
+                        'QA Testing': 'badge-status-in-review',
+                        'Closed': 'badge-status-closed',
+                        'Reopened': 'badge-status-open'
+                    } %}
+                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium {{ status_class.get(ticket.status, 'badge-status-open') }}">
+                        {{ ticket.status }}
+                    </span>
+                    {% set type_class = {
+                        'Bug': 'badge-type-bug',
+                        'Feature': 'badge-type-feature',
+                        'Task': 'badge-type-task',
+                        'Improvement': 'badge-type-story',
+                        'Epic': 'badge-type-epic'
+                    } %}
+                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium {{ type_class.get(ticket.ticket_type, 'bg-gray-100 text-gray-700') }}">
+                        {{ ticket.ticket_type }}
+                    </span>
+                </div>
+                <div class="flex items-center justify-between text-xs text-gray-500">
+                    <div class="flex items-center space-x-3">
+                        {% if ticket.assignee %}
+                        <div class="flex items-center">
+                            <div class="avatar-placeholder w-5 h-5 text-xs mr-1">
+                                {{ (ticket.assignee.display_name if ticket.assignee.display_name else ticket.assignee.username)[0] }}
+                            </div>
+                            <span>{{ ticket.assignee.display_name if ticket.assignee.display_name else ticket.assignee.username }}</span>
+                        </div>
+                        {% else %}
+                        <span class="italic text-gray-400">Unassigned</span>
+                        {% endif %}
+                        {% if ticket.sprint %}
+                        <span>{{ ticket.sprint.name }}</span>
+                        {% endif %}
+                    </div>
+                    {% if ticket.due_date %}
+                    <span class="{% if ticket.is_overdue is defined and ticket.is_overdue %}text-red-600 font-medium{% endif %}">
+                        {{ ticket.due_date.strftime('%b %d') if ticket.due_date else '' }}
+                    </span>
+                    {% endif %}
+                </div>
+                {% if ticket.labels and ticket.labels|length > 0 %}
+                <div class="flex flex-wrap gap-1 mt-2">
+                    {% for label in ticket.labels[:3] %}
+                    <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium" style="background-color: {{ label.color }}20; color: {{ label.color }}; border: 1px solid {{ label.color }}40;">
+                        {{ label.name }}
+                    </span>
+                    {% endfor %}
+                    {% if ticket.labels|length > 3 %}
+                    <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-600">
+                        +{{ ticket.labels|length - 3 }}
+                    </span>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    {% if total_pages is defined and total_pages > 1 %}
+    <nav class="flex items-center justify-between mt-6" aria-label="Pagination">
+        <div class="hidden sm:block">
+            <p class="text-sm text-gray-700">
+                Showing
+                <span class="font-medium">{{ ((current_page - 1) * page_size) + 1 }}</span>
+                to
+                <span class="font-medium">{{ [current_page * page_size, total_count]|min }}</span>
+                of
+                <span class="font-medium">{{ total_count }}</span>
+                results
+            </p>
+        </div>
+        <div class="flex-1 flex justify-between sm:justify-end space-x-2">
+            {% if current_page > 1 %}
+            <a href="?page={{ current_page - 1 }}{% if filters and filters.search %}&search={{ filters.search }}{% endif %}{% if filters and filters.status %}&status={{ filters.status }}{% endif %}{% if filters and filters.ticket_type %}&ticket_type={{ filters.ticket_type }}{% endif %}{% if filters and filters.priority %}&priority={{ filters.priority }}{% endif %}{% if filters and filters.assignee_id %}&assignee_id={{ filters.assignee_id }}{% endif %}{% if filters and filters.sprint_id %}&sprint_id={{ filters.sprint_id }}{% endif %}{% if filters and filters.label_id %}&label_id={{ filters.label_id }}{% endif %}{% if filters and filters.sort %}&sort={{ filters.sort }}{% endif %}{% if project %}&project_id={{ project.id }}{% endif %}" class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors duration-200">
+                <svg class="w-4 h-4 mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" /></svg>
+                Previous
+            </a>
+            {% else %}
+            <span class="relative inline-flex items-center px-4 py-2 border border-gray-200 text-sm font-medium rounded-md text-gray-400 bg-gray-50 cursor-not-allowed">
+                <svg class="w-4 h-4 mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" /></svg>
+                Previous
+            </span>
+            {% endif %}
+
+            <!-- Page Numbers (desktop) -->
+            <div class="hidden md:flex items-center space-x-1">
+                {% set start_page = [1, current_page - 2]|max %}
+                {% set end_page = [total_pages, current_page + 2]|min %}
+
+                {% if start_page > 1 %}
+                <a href="?page=1{% if filters and filters.search %}&search={{ filters.search }}{% endif %}{% if filters and filters.status %}&status={{ filters.status }}{% endif %}{% if filters and filters.ticket_type %}&ticket_type={{ filters.ticket_type }}{% endif %}{% if filters and filters.priority %}&priority={{ filters.priority }}{% endif %}{% if filters and filters.assignee_id %}&assignee_id={{ filters.assignee_id }}{% endif %}{% if filters and filters.sprint_id %}&sprint_id={{ filters.sprint_id }}{% endif %}{% if filters and filters.label_id %}&label_id={{ filters.label_id }}{% endif %}{% if filters and filters.sort %}&sort={{ filters.sort }}{% endif %}{% if project %}&project_id={{ project.id }}{% endif %}" class="relative inline-flex items-center px-3 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">1</a>
+                {% if start_page > 2 %}
+                <span class="px-2 py-2 text-gray-500 text-sm">…</span>
+                {% endif %}
+                {% endif %}
+
+                {% for p in range(start_page, end_page + 1) %}
+                {% if p == current_page %}
+                <span class="relative inline-flex items-center px-3 py-2 border border-primary-500 text-sm font-medium rounded-md text-white bg-primary-600">{{ p }}</span>
+                {% else %}
+                <a href="?page={{ p }}{% if filters and filters.search %}&search={{ filters.search }}{% endif %}{% if filters and filters.status %}&status={{ filters.status }}{% endif %}{% if filters and filters.ticket_type %}&ticket_type={{ filters.ticket_type }}{% endif %}{% if filters and filters.priority %}&priority={{ filters.priority }}{% endif %}{% if filters and filters.assignee_id %}&assignee_id={{ filters.assignee_id }}{% endif %}{% if filters and filters.sprint_id %}&sprint_id={{ filters.sprint_id }}{% endif %}{% if filters and filters.label_id %}&label_id={{ filters.label_id }}{% endif %}{% if filters and filters.sort %}&sort={{ filters.sort }}{% endif %}{% if project %}&project_id={{ project.id }}{% endif %}" class="relative inline-flex items-center px-3 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">{{ p }}</a>
+                {% endif %}
+                {% endfor %}
+
+                {% if end_page < total_pages %}
+                {% if end_page < total_pages - 1 %}
+                <span class="px-2 py-2 text-gray-500 text-sm">…</span>
+                {% endif %}
+                <a href="?page={{ total_pages }}{% if filters and filters.search %}&search={{ filters.search }}{% endif %}{% if filters and filters.status %}&status={{ filters.status }}{% endif %}{% if filters and filters.ticket_type %}&ticket_type={{ filters.ticket_type }}{% endif %}{% if filters and filters.priority %}&priority={{ filters.priority }}{% endif %}{% if filters and filters.assignee_id %}&assignee_id={{ filters.assignee_id }}{% endif %}{% if filters and filters.sprint_id %}&sprint_id={{ filters.sprint_id }}{% endif %}{% if filters and filters.label_id %}&label_id={{ filters.label_id }}{% endif %}{% if filters and filters.sort %}&sort={{ filters.sort }}{% endif %}{% if project %}&project_id={{ project.id }}{% endif %}" class="relative inline-flex items-center px-3 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">{{ total_pages }}</a>
+                {% endif %}
+            </div>
+
+            {% if current_page < total_pages %}
+            <a href="?page={{ current_page + 1 }}{% if filters and filters.search %}&search={{ filters.search }}{% endif %}{% if filters and filters.status %}&status={{ filters.status }}{% endif %}{% if filters and filters.ticket_type %}&ticket_type={{ filters.ticket_type }}{% endif %}{% if filters and filters.priority %}&priority={{ filters.priority }}{% endif %}{% if filters and filters.assignee_id %}&assignee_id={{ filters.assignee_id }}{% endif %}{% if filters and filters.sprint_id %}&sprint_id={{ filters.sprint_id }}{% endif %}{% if filters and filters.label_id %}&label_id={{ filters.label_id }}{% endif %}{% if filters and filters.sort %}&sort={{ filters.sort }}{% endif %}{% if project %}&project_id={{ project.id }}{% endif %}" class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors duration-200">
+                Next
+                <svg class="w-4 h-4 ml-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" /></svg>
+            </a>
+            {% else %}
+            <span class="relative inline-flex items-center px-4 py-2 border border-gray-200 text-sm font-medium rounded-md text-gray-400 bg-gray-50 cursor-not-allowed">
+                Next
+                <svg class="w-4 h-4 ml-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" /></svg>
+            </span>
+            {% endif %}
+        </div>
+    </nav>
+    {% endif %}
+
+    {% else %}
+    <!-- Empty State -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center">
+        <svg class="mx-auto h-12 w-12 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 6v.75m0 3v.75m0 3v.75m0 3V18m-9-5.25h5.25M7.5 15h3M3.375 5.25c-.621 0-1.125.504-1.125 1.125v3.026a2.999 2.999 0 0 1 0 5.198v3.026c0 .621.504 1.125 1.125 1.125h17.25c.621 0 1.125-.504 1.125-1.125v-3.026a2.999 2.999 0 0 1 0-5.198V6.375c0-.621-.504-1.125-1.125-1.125H3.375Z" />
+        </svg>
+        <h3 class="mt-4 text-lg font-medium text-gray-900">No tickets found</h3>
+        <p class="mt-2 text-sm text-gray-500">
+            {% if filters and (filters.search or filters.status or filters.ticket_type or filters.priority or filters.assignee_id or filters.sprint_id or filters.label_id) %}
+                No tickets match your current filters. Try adjusting your search criteria.
+            {% else %}
+                Get started by creating your first ticket.
+            {% endif %}
+        </p>
+        <div class="mt-6 flex items-center justify-center space-x-3">
+            {% if filters and (filters.search or filters.status or filters.ticket_type or filters.priority or filters.assignee_id or filters.sprint_id or filters.label_id) %}
+            <a href="/tickets{% if project %}?project_id={{ project.id }}{% endif %}" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors duration-200">
+                Clear Filters
+            </a>
+            {% endif %}
+            {% if user and user.role in ['Super Admin', 'Project Manager', 'Developer', 'QA'] %}
+            <a href="/tickets/create{% if project %}?project_id={{ project.id }}{% endif %}" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors duration-200">
+                <svg class="w-4 h-4 mr-2 -ml-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+                Create Ticket
+            </a>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var sortSelect = document.getElementById('sort');
+        if (sortSelect) {
+            sortSelect.addEventListener('change', function() {
+                document.getElementById('filter-form').submit();
+            });
+        }
+    });
+</script>
+{% endblock %}

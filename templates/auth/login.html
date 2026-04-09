@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block title %}Login - ProjectForge{% endblock %}
+
+{% block content %}
+<div class="min-h-[60vh] flex items-center justify-center">
+    <div class="w-full max-w-md">
+        <div class="bg-white shadow-lg rounded-lg border border-gray-200 p-8">
+            <div class="text-center mb-8">
+                <h1 class="text-2xl font-bold text-gray-900">Sign in to ProjectForge</h1>
+                <p class="mt-2 text-sm text-gray-600">Enter your credentials to access your account</p>
+            </div>
+
+            {% if error %}
+            <div class="mb-6 rounded-lg px-4 py-3 text-sm bg-red-50 text-red-800 border border-red-200 flex items-center" role="alert">
+                <svg class="h-5 w-5 mr-2 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+                </svg>
+                <span>{{ error }}</span>
+            </div>
+            {% endif %}
+
+            {% if errors %}
+            <div class="mb-6 rounded-lg px-4 py-3 text-sm bg-red-50 text-red-800 border border-red-200" role="alert">
+                <div class="flex items-center mb-1">
+                    <svg class="h-5 w-5 mr-2 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+                    </svg>
+                    <span class="font-medium">Please fix the following errors:</span>
+                </div>
+                <ul class="ml-7 list-disc space-y-1">
+                    {% for err in errors %}
+                    <li>{{ err }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+
+            <form method="POST" action="/auth/login" class="space-y-6" novalidate>
+                <div>
+                    <label for="username" class="block text-sm font-medium text-gray-700 mb-1">Username</label>
+                    <input
+                        type="text"
+                        id="username"
+                        name="username"
+                        value="{{ username | default('', true) }}"
+                        required
+                        autocomplete="username"
+                        placeholder="Enter your username"
+                        class="block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-400 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition-colors duration-200"
+                    >
+                </div>
+
+                <div>
+                    <label for="password" class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                    <input
+                        type="password"
+                        id="password"
+                        name="password"
+                        required
+                        autocomplete="current-password"
+                        placeholder="Enter your password"
+                        class="block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-400 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition-colors duration-200"
+                    >
+                </div>
+
+                <div>
+                    <button
+                        type="submit"
+                        class="w-full flex justify-center py-2.5 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors duration-200"
+                    >
+                        Sign in
+                    </button>
+                </div>
+            </form>
+
+            <div class="mt-6 text-center">
+                <p class="text-sm text-gray-600">
+                    Don't have an account?
+                    <a href="/auth/register" class="font-medium text-primary-600 hover:text-primary-500 transition-colors duration-200">Create an account</a>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
